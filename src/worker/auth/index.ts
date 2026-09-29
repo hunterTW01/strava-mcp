@@ -108,12 +108,35 @@ async function handleAuthorizeGet(request: Request, env: Env): Promise<Response>
   const consent = await env.OAUTH_PROVIDER.beginConsent(oauthRequest);
   const csrf = getCookie(request, CSRF_COOKIE_NAME) ?? randomBase64Url();
   const headers = new Headers(consent.headers);
-  headers.append('Set-Cookie', serializeCookie(CSRF_COOKIE_NAME, csrf, FLOW_TTL_SECONDS));
+
+  // Allow the consent form's redirect chain to continue to
+  // Cloudflare Access for SaaS after POST /authorize.
+  const accessOrigin = new URL(
+    requireHttpsUrl(
+      env.ACCESS_AUTHORIZATION_URL,
+      'ACCESS_AUTHORIZATION_URL',
+    ),
+  ).origin;
+
+  headers.append(
+    'Set-Cookie',
+    serializeCookie(CSRF_COOKIE_NAME, csrf, FLOW_TTL_SECONDS),
+  );
   headers.set('Cache-Control', 'no-store');
-  headers.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+  headers.set(
+    'Content-Security-Policy',
+    `default-src 'none'; ` +
+      `style-src 'unsafe-inline'; ` +
+      `form-action 'self' ${accessOrigin}; ` +
+      `base-uri 'none'; ` +
+      `frame-ancestors 'none'`,
+  );
   headers.set('Content-Type', 'text/html; charset=utf-8');
   headers.set('X-Content-Type-Options', 'nosniff');
-  return new Response(renderConsentPage(details, consent.handle, csrf), { headers });
+
+  return new Response(renderConsentPage(details, consent.handle, csrf), {
+    headers,
+  });
 }
 
 async function handleAuthorizePost(request: Request, env: Env): Promise<Response> {

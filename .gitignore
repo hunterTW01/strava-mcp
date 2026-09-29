@@ -9,6 +9,8 @@ dist/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+*wrangler.jsonc*
+!wrangler.jsonc.example
 
 # Cloudflare local and dry-run output
 .wrangler/
