@@ -5,7 +5,9 @@ import { getStravaTokenRuntime } from "./runtime/stravaTokenRuntime.js";
 // --- Axios Instance & Interceptor --- 
 // Create an Axios instance to apply interceptors globally for this client
 export const stravaApi = axios.create({
-    baseURL: 'https://www.strava.com/api/v3'
+    baseURL: 'https://www.strava.com/api/v3',
+    // Cloudflare Workers rejects Axios's browser default cache mode.
+    fetchOptions: { cache: 'no-store' }
 });
 
 // Add a request interceptor (can be used for logging or modifying requests)
