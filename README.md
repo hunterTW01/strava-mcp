@@ -192,6 +192,94 @@ Then point Claude to your local build:
 
 ---
 
+## Cloudflare Worker Deployment
+
+The Worker deployment uses a stateless MCP Streamable HTTP endpoint at `/mcp`. The Worker uses `@cloudflare/workers-oauth-provider` for MCP OAuth, Cloudflare Access for SaaS as the OIDC upstream, `OAUTH_KV` for OAuth provider state, and the `STRAVA_ACCOUNTS` Durable Object for each user's Strava tokens and refresh-token rotation.
+
+This is separate from the stdio setup above. Local stdio remains supported; `connect-strava`, GPX export, and TCX export remain local-only because they use the local browser/filesystem workflow. The Worker flow links Strava once after the user completes Access authentication, then reuses the MCP connection and refreshes Strava tokens through the Durable Object.
+
+### Prerequisites
+
+- Node.js `>=20.19.0`, npm, and a Cloudflare account with Workers, KV, and Durable Objects available.
+- A deployed-domain hostname for the Worker, for example `strava-mcp.example.com`.
+- A Strava API application and a Cloudflare Access for SaaS OIDC application.
+- The local dependencies installed with `npm install`.
+
+### Configure Cloudflare and Strava
+
+1. Create an Access for SaaS OIDC application. Register `https://<your-domain>/auth/access/callback` as its callback URL, configure its upstream IdP, and record the OIDC authorization URL, token URL, JWKS URL, and issuer.
+2. Configure the Strava application’s callback domain as the Worker hostname (for example, `strava-mcp.example.com`). Its callback URL must be `https://<your-domain>/auth/strava/callback`.
+3. Create the OAuth KV namespace and copy the returned ID into `wrangler.jsonc`, replacing the all-zero placeholder currently used for `OAUTH_KV`:
+
+   ```bash
+   npx wrangler kv namespace create OAUTH_KV
+   ```
+
+4. Keep the `STRAVA_ACCOUNTS` Durable Object binding and migration in `wrangler.jsonc`. Do not use KV for per-user Strava tokens.
+
+### Environment
+
+The Worker requires these names. Put secret values in Cloudflare Secrets; `ALLOWED_EMAILS` and `STRAVA_SCOPES` are optional Wrangler variables.
+
+| Name | Use |
+| --- | --- |
+| `ACCESS_CLIENT_ID` | Access for SaaS OIDC client ID |
+| `ACCESS_CLIENT_SECRET` | Access for SaaS OIDC client secret |
+| `ACCESS_AUTHORIZATION_URL` | Access OIDC authorization endpoint |
+| `ACCESS_TOKEN_URL` | Access OIDC token endpoint |
+| `ACCESS_JWKS_URL` | Access OIDC JWKS endpoint |
+| `ACCESS_ISSUER` | Access OIDC issuer |
+| `COOKIE_ENCRYPTION_KEY` | At least 32 random bytes for encrypted OAuth cookies |
+| `STRAVA_CLIENT_ID` | Strava application client ID |
+| `STRAVA_CLIENT_SECRET` | Strava application client secret |
+| `PUBLIC_BASE_URL` | Optional canonical Worker origin, recommended for a production custom domain |
+| `ALLOWED_EMAILS` | Optional comma-separated Access email allowlist |
+| `STRAVA_SCOPES` | Optional comma-separated Strava scopes |
+
+For a deployed Worker, set the required values with `wrangler secret put` (repeat for each name):
+
+```bash
+npx wrangler secret put ACCESS_CLIENT_ID
+npx wrangler secret put ACCESS_CLIENT_SECRET
+npx wrangler secret put ACCESS_AUTHORIZATION_URL
+npx wrangler secret put ACCESS_TOKEN_URL
+npx wrangler secret put ACCESS_JWKS_URL
+npx wrangler secret put ACCESS_ISSUER
+npx wrangler secret put COOKIE_ENCRYPTION_KEY
+npx wrangler secret put STRAVA_CLIENT_ID
+npx wrangler secret put STRAVA_CLIENT_SECRET
+```
+
+For local Worker development, create an untracked `.dev.vars` beside `wrangler.jsonc` with the same required names and values. Add optional `ALLOWED_EMAILS` and `STRAVA_SCOPES` there when you need local overrides. Never commit `.dev.vars` or any secret values.
+
+### Verify Before Deploying
+
+Run the tests and Worker build before any deployment:
+
+```bash
+npm test
+npm run typecheck
+npm run build:worker
+```
+
+`npm run build:worker` is a Wrangler dry-run and writes its preview to `.wrangler-dist`; it does not deploy. To exercise the local Worker, run:
+
+```bash
+npm run dev:worker
+```
+
+Then connect MCP Inspector to `http://localhost:8788/mcp` and verify `initialize`, `tools/list`, and a representative `tools/call`. Also verify the Access challenge, the one-time Strava linking redirect, and a subsequent request using the linked account.
+
+Only after the tests, dry-run, and Inspector checks pass should you deploy with:
+
+```bash
+npm run deploy:worker
+```
+
+After deployment, use `https://<your-domain>/mcp` as the remote MCP URL. The first connection completes Access authentication and then Strava linking at `/auth/strava/callback`; later requests use the MCP bearer token and the user’s `STRAVA_ACCOUNTS` record. This repository has not been deployed by this guide.
+
+---
+
 ## Example Conversations
 
 ### Morning Check-in
