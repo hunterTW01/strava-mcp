@@ -1,0 +1,28 @@
+{
+  "interface": {
+    "displayName": "Strava",
+    "composerIcon": "./assets/logo.png",
+    "logo": "./assets/logo.png",
+    "shortDescription": "Analyze Strava training data",
+    "longDescription": "Review connected Strava activities, compare training periods, inspect detailed streams and laps, and explore routes and segments with privacy-aware guidance.",
+    "developerName": "Hunter",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "分析我最近 30 天的訓練量與趨勢。",
+      "比較我這個月與上個月的跑步和騎乘。",
+      "分析我最近一次活動的心率、速度、功率與踏頻。"
+    ]
+  },
+  "name": "personal-strava",
+  "version": "0.1.1",
+  "description": "Connect to Strava to review activities, training trends, routes, segments, streams, zones, and athlete statistics.",
+  "author": {
+    "name": "Hunter"
+  },
+  "keywords": [],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json"
+}

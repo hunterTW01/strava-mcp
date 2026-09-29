@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "personal-strava",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Connect to Strava to review activities, training trends, routes, segments, streams, zones, and athlete statistics.",
   "author": {
     "name": "Hunter"
@@ -10,6 +10,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Strava",
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png",
         "shortDescription": "Analyze Strava training data",
         "longDescription": "Review connected Strava activities, compare training periods, inspect detailed streams and laps, and explore routes and segments with privacy-aware guidance.",
         "developerName": "Hunter",

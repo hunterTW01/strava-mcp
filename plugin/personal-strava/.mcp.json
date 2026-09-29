@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "strava": {
+      "type": "streamable-http",
+      "url": "https://strava-mcp.suhome.net/mcp",
+      "headers": {}
+    }
+  }
+}
