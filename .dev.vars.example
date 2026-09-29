@@ -1,0 +1,17 @@
+# Cloudflare Access for SaaS OIDC application
+ACCESS_CLIENT_ID=
+ACCESS_CLIENT_SECRET=
+ACCESS_AUTHORIZATION_URL=https://YOUR_TEAM.cloudflareaccess.com/cdn-cgi/access/sso/oidc/YOUR_APP_ID/authorization
+ACCESS_TOKEN_URL=https://YOUR_TEAM.cloudflareaccess.com/cdn-cgi/access/sso/oidc/YOUR_APP_ID/token
+ACCESS_JWKS_URL=https://YOUR_TEAM.cloudflareaccess.com/cdn-cgi/access/certs
+ACCESS_ISSUER=https://YOUR_TEAM.cloudflareaccess.com
+
+# Generate at least 32 random bytes, for example: openssl rand -hex 32
+COOKIE_ENCRYPTION_KEY=
+
+# Strava API application
+STRAVA_CLIENT_ID=
+STRAVA_CLIENT_SECRET=
+
+# Optional canonical Worker origin, without a trailing path.
+# PUBLIC_BASE_URL=http://localhost:8788

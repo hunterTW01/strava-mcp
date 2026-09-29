@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "strava-mcp",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-09-29",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "STRAVA_ACCOUNTS",
+        "class_name": "StravaAccountDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["StravaAccountDO"]
+    }
+  ],
+  "vars": {
+    "STRAVA_SCOPES": "read,activity:read_all,profile:read_all,profile:write",
+    "ALLOWED_EMAILS": ""
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "dev": {
+    "port": 8788
+  }
+}
