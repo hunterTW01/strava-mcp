@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { stravaApi } from '../stravaClient.js';
+import axios from 'axios';
+import { handleApiError, stravaApi } from '../stravaClient.js';
+import { getValidAccessToken } from '../runtime/stravaTokenRuntime.js';
 
 // Define stream types available in Strava API
 const STREAM_TYPES = [
@@ -172,44 +174,50 @@ export function formatStreamDataCompact(stream: BaseStream, data: any[]): any {
 
 export function formatStreamDataVerbose(stream: BaseStream, data: any[]): any {
     switch (stream.type) {
-        case 'latlng':
+        case 'latlng': {
             const latlngData = data as [number, number][];
             return latlngData.map(([lat, lng]) => ({
                 latitude: Number(lat.toFixed(6)),
                 longitude: Number(lng.toFixed(6))
             }));
+        }
         
-        case 'time':
+        case 'time': {
             const timeData = data as number[];
             return timeData.map(seconds => ({
                 seconds_from_start: seconds,
                 formatted: new Date(seconds * 1000).toISOString().substr(11, 8)
             }));
+        }
         
-        case 'distance':
+        case 'distance': {
             const distanceData = data as number[];
             return distanceData.map(meters => ({
                 meters,
                 kilometers: Number((meters / 1000).toFixed(2))
             }));
+        }
         
-        case 'velocity_smooth':
+        case 'velocity_smooth': {
             const velocityData = data as number[];
             return velocityData.map(mps => ({
                 meters_per_second: mps,
                 kilometers_per_hour: Number((mps * 3.6).toFixed(1))
             }));
+        }
         
         case 'heartrate':
         case 'cadence':
         case 'watts':
-        case 'temp':
+        case 'temp': {
             const numericData = data as number[];
             return numericData.map(v => Number(v));
+        }
         
-        case 'grade_smooth':
+        case 'grade_smooth': {
             const gradeData = data as number[];
             return gradeData.map(grade => Number(grade.toFixed(1)));
+        }
         
         case 'moving':
             return data as boolean[];
@@ -377,7 +385,7 @@ export const getActivityStreamsTool = {
         // the full native resolution (often 'high', ~10000 points), causing slow responses.
         // Callers who need more data should explicitly pass resolution: 'medium' or 'high'.
         const resolution = rawResolution ?? 'low';
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
         if (!token) {
             return {
                 content: [{ type: 'text' as const, text: '❌ Missing STRAVA_ACCESS_TOKEN in .env' }],
@@ -386,9 +394,6 @@ export const getActivityStreamsTool = {
         }
 
         try {
-            // Set the auth token for this request
-            stravaApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            
             // Build query parameters
             // Always send resolution to control payload size (defaults to 'low' for issue #14)
             const params: Record<string, any> = {};
@@ -401,7 +406,19 @@ export const getActivityStreamsTool = {
             // Build the endpoint URL with types in the path
             const endpoint = `/activities/${id}/streams/${types.join(',')}${queryString ? '?' + queryString : ''}`;
             
-            const response = await stravaApi.get<StreamSet>(endpoint);
+            const requestStreams = (requestToken: string) => stravaApi.get<StreamSet>(endpoint, {
+                headers: { Authorization: `Bearer ${requestToken}` },
+            });
+            let response;
+            try {
+                response = await requestStreams(token);
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    response = await handleApiError(error, 'getActivityStreams', requestStreams);
+                } else {
+                    throw error;
+                }
+            }
             let streams = response.data;
 
             if (!streams || streams.length === 0) {
@@ -436,7 +453,7 @@ export const getActivityStreamsTool = {
 
                 // Add type-specific statistics (guard against empty arrays)
                 switch (stream.type) {
-                    case 'heartrate':
+                    case 'heartrate': {
                         const hrData = data as number[];
                         if (hrData.length > 0) {
                             stats = {
@@ -447,7 +464,8 @@ export const getActivityStreamsTool = {
                             };
                         }
                         break;
-                    case 'watts':
+                    }
+                    case 'watts': {
                         const powerData = data as number[];
                         if (powerData.length > 0) {
                             stats = {
@@ -458,7 +476,8 @@ export const getActivityStreamsTool = {
                             };
                         }
                         break;
-                    case 'velocity_smooth':
+                    }
+                    case 'velocity_smooth': {
                         const velocityData = data as number[];
                         if (velocityData.length > 0) {
                             stats = {
@@ -468,6 +487,7 @@ export const getActivityStreamsTool = {
                             };
                         }
                         break;
+                    }
                 }
 
                 streamStats[stream.type] = stats;
@@ -706,4 +726,4 @@ function calculateNormalizedPower(powerData: number[]): number {
     );
     
     return Math.round(avgPower);
-} 
+}

@@ -396,8 +396,7 @@ describe('chunking behavior', () => {
         const firstMessageText = result.content[0].text;
         const jsonMatch = firstMessageText.match(/Message 1\/\d+:\n(.*)/s);
         const jsonText = jsonMatch ? jsonMatch[1] : firstMessageText;
-        const metadata = JSON.parse(jsonText).metadata;
-        const chunkSize = metadata.chunk_size;
+        expect(JSON.parse(jsonText).metadata.chunk_size).toBeGreaterThan(0);
         
         // Verify chunks don't overlap and cover all data
         let totalPoints = 0;

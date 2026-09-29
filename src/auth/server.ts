@@ -19,7 +19,6 @@ export interface AuthResult {
  */
 export function startAuthServer(): Promise<AuthResult> {
     return new Promise((resolve) => {
-        let server: http.Server;
         let resolved = false;
         
         // Timeout after 5 minutes
@@ -46,7 +45,7 @@ export function startAuthServer(): Promise<AuthResult> {
             }
         };
 
-        server = http.createServer(async (req, res) => {
+        const server = http.createServer(async (req, res) => {
             const url = new URL(req.url || '/', `http://localhost:${PORT}`);
             
             try {

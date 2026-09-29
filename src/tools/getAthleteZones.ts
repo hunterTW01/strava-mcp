@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getAthleteZones as fetchAthleteZones, StravaAthleteZones } from "../stravaClient.js";
-import { formatDuration } from "../server.js"; // Shared helper
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 
 const name = "get-athlete-zones";
 const description = "Retrieves the authenticated athlete's configured heart rate and power zones.";
@@ -9,6 +9,24 @@ const description = "Retrieves the authenticated athlete's configured heart rate
 const inputSchema = z.object({}); 
 
 type GetAthleteZonesInput = z.infer<typeof inputSchema>;
+
+function formatDuration(seconds: number): string {
+    if (isNaN(seconds) || seconds < 0) {
+        return "N/A";
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const parts: string[] = [];
+
+    if (hours > 0) {
+        parts.push(hours.toString().padStart(2, "0"));
+    }
+    parts.push(minutes.toString().padStart(2, "0"));
+    parts.push(secs.toString().padStart(2, "0"));
+    return parts.join(":");
+}
 
 // Helper to format a single zone range
 function formatZoneRange(zone: { min: number; max?: number }): string {
@@ -61,7 +79,7 @@ export const getAthleteZonesTool = {
     description: description + "\n\nOutput includes both a formatted summary and the raw JSON data.",
     inputSchema,
     execute: async (_input: GetAthleteZonesInput) => {
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
 
         if (!token) {
             console.error("Missing STRAVA_ACCESS_TOKEN environment variable.");
@@ -110,4 +128,4 @@ export const getAthleteZonesTool = {
             };
         }
     }
-}; 
+};

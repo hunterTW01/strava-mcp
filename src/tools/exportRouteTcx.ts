@@ -2,6 +2,7 @@ import { z } from "zod";
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { exportRouteTcx as fetchTcxData } from "../stravaClient.js";
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 
 // Define the input schema for the tool
 const ExportRouteTcxInputSchema = z.object({
@@ -17,7 +18,7 @@ export const exportRouteTcx = {
     description: "Exports a specific Strava route in TCX format and saves it to a pre-configured local directory.",
     inputSchema: ExportRouteTcxInputSchema,
     execute: async ({ routeId }: ExportRouteTcxInput) => {
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
         if (!token) {
             // Strict return structure
             return {
@@ -77,4 +78,4 @@ export const exportRouteTcx = {
             };
         }
     },
-}; 
+};

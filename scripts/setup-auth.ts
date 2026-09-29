@@ -33,7 +33,7 @@ async function loadEnv(): Promise<{ clientId?: string; clientSecret?: string }> 
       clientId: envConfig.STRAVA_CLIENT_ID,
       clientSecret: envConfig.STRAVA_CLIENT_SECRET,
     };
-  } catch (error) {
+  } catch {
     console.log('.env file not found or not readable. Will prompt for all values.');
     return {};
   }
@@ -43,7 +43,7 @@ async function updateEnvFile(tokens: { accessToken: string; refreshToken: string
   let envContent = '';
   try {
     envContent = await fs.readFile(envPath, 'utf-8');
-  } catch (error) {
+  } catch {
     console.log('.env file not found, creating a new one.');
   }
 
@@ -150,7 +150,7 @@ async function main() {
         let envContent = '';
         try {
             envContent = await fs.readFile(envPath, 'utf-8');
-        } catch (readError) { /* Ignore if file doesn't exist, it was created in updateEnvFile */ }
+        } catch { /* Ignore if file doesn't exist, it was created in updateEnvFile */ }
 
         let needsUpdate = false;
         if (!envContent.includes('STRAVA_CLIENT_ID=')) {
@@ -190,4 +190,4 @@ async function main() {
   }
 }
 
-main(); 
+main();

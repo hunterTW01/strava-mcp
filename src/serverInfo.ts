@@ -1,12 +1,4 @@
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
-
-type PackageJson = {
-  name?: string;
-  version?: string;
-  mcpName?: string;
-};
+import pkg from "../package.json" with { type: "json" };
 
 export const SERVER_NAME = "Strava MCP Server";
 
@@ -16,17 +8,10 @@ export function getServerInfo(): {
   packageName: string;
   mcpName?: string;
 } {
-  let pkg: PackageJson = {};
-  try {
-    pkg = require("../package.json") as PackageJson;
-  } catch {
-    // If package.json isn't available at runtime, fall back to defaults.
-  }
-
   return {
     name: SERVER_NAME,
-    version: pkg.version ?? "unknown",
-    packageName: pkg.name ?? "unknown",
+    version: pkg.version,
+    packageName: pkg.name,
     mcpName: pkg.mcpName,
   };
 }

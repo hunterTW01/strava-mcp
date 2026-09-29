@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getActivityLaps as getActivityLapsClient } from "../stravaClient.js";
-import { formatDuration } from "../server.js"; // Import helper
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 
 const name = "get-activity-laps";
 
@@ -40,12 +40,30 @@ const inputSchema = z.object({
 
 type GetActivityLapsInput = z.infer<typeof inputSchema>;
 
+function formatDuration(seconds: number): string {
+    if (isNaN(seconds) || seconds < 0) {
+        return "N/A";
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const parts: string[] = [];
+
+    if (hours > 0) {
+        parts.push(hours.toString().padStart(2, "0"));
+    }
+    parts.push(minutes.toString().padStart(2, "0"));
+    parts.push(secs.toString().padStart(2, "0"));
+    return parts.join(":");
+}
+
 export const getActivityLapsTool = {
     name,
     description,
     inputSchema,
     execute: async ({ id }: GetActivityLapsInput) => {
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
 
         if (!token) {
             console.error("Missing STRAVA_ACCESS_TOKEN environment variable.");
@@ -107,4 +125,4 @@ export const getActivityLapsTool = {
             };
         }
     }
-}; 
+};

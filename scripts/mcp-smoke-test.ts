@@ -37,7 +37,7 @@ async function main() {
 
     if (!toolNames.includes("get-all-activities")) {
       throw new Error(
-        `Expected tool \'get-all-activities\' to be registered. Tools: ${toolNames.join(", ")}`
+        `Expected tool 'get-all-activities' to be registered. Tools: ${toolNames.join(", ")}`
       );
     }
 
