@@ -34,7 +34,7 @@ describe('get-activity-streams API Integration', () => {
                 process.env.STRAVA_ACCESS_TOKEN = accessToken;
                 console.log(`✓ Loaded token from config: ${accessToken.substring(0, 5)}...${accessToken.slice(-5)}`);
             }
-        } catch (error) {
+        } catch {
             accessToken = process.env.STRAVA_ACCESS_TOKEN;
         }
         

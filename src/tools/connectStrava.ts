@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { loadConfig, hasValidTokens, hasClientCredentials, getConfigPath } from '../config.js';
+import { loadConfig, hasClientCredentials, getConfigPath } from '../config.js';
 import { startAuthServer, getAuthUrl } from '../auth/server.js';
 import { getAuthenticatedAthlete } from '../stravaClient.js';
+import { getStravaTokenRuntime } from '../runtime/stravaTokenRuntime.js';
 
 // Dynamic import for 'open' package (ESM)
 async function openBrowser(url: string): Promise<void> {
@@ -26,11 +27,11 @@ export const connectStravaTool = {
         try {
             // Check if already authenticated
             if (!force) {
-                const config = await loadConfig();
-                if (hasValidTokens(config)) {
+                const runtime = getStravaTokenRuntime();
+                const token = await runtime.getValidAccessToken();
+                if (token) {
                     // Try to verify the tokens work
                     try {
-                        const token = config.accessToken!;
                         const athlete = await getAuthenticatedAthlete(token);
                         return {
                             content: [{
@@ -92,12 +93,7 @@ export const disconnectStravaTool = {
     inputSchema: z.object({}),
     execute: async (): Promise<{ content: Array<{ type: 'text'; text: string }> }> => {
         try {
-            const { clearConfig } = await import('../config.js');
-            await clearConfig();
-            
-            // Clear from process.env as well
-            delete process.env.STRAVA_ACCESS_TOKEN;
-            delete process.env.STRAVA_REFRESH_TOKEN;
+            await getStravaTokenRuntime().disconnect();
             
             return {
                 content: [{
@@ -123,8 +119,10 @@ export const checkStravaConnectionTool = {
     execute: async (): Promise<{ content: Array<{ type: 'text'; text: string }> }> => {
         try {
             const config = await loadConfig();
+            const runtime = getStravaTokenRuntime();
+            const status = await runtime.getConnectionStatus();
             
-            if (!hasClientCredentials(config) && !hasValidTokens(config)) {
+            if (!hasClientCredentials(config) && !status.connected) {
                 return {
                     content: [{
                         type: 'text' as const,
@@ -133,7 +131,7 @@ export const checkStravaConnectionTool = {
                 };
             }
             
-            if (!hasValidTokens(config)) {
+            if (!status.connected) {
                 return {
                     content: [{
                         type: 'text' as const,
@@ -144,7 +142,10 @@ export const checkStravaConnectionTool = {
             
             // Try to verify the connection
             try {
-                const token = config.accessToken!;
+                const token = await runtime.getValidAccessToken();
+                if (!token) {
+                    throw new Error('No valid Strava access token is available.');
+                }
                 const athlete = await getAuthenticatedAthlete(token);
                 return {
                     content: [{

@@ -3,7 +3,9 @@
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "ES2022", // Target modern Node.js versions
+    "target": "ES2022", // Target modern Node.js and Workers runtimes
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "@cloudflare/workers-types"],
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
@@ -20,8 +22,6 @@
     "module": "ESNext",           // Align with "type": "module" in package.json
 
     /* If your code runs in the DOM: */
-    // "lib": ["es2022", "dom", "dom.iterable"],
-
     /* If you want tsc to emit files: */
     "outDir": "dist",
     "sourceMap": true,
@@ -33,4 +33,4 @@
   },
   "include": ["src/**/*.ts"], // Include all TypeScript files in the src directory
   "exclude": ["node_modules", "dist"] // Exclude node_modules and the output directory
-} 
+}

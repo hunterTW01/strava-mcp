@@ -20,7 +20,7 @@ export interface StravaConfig {
 async function ensureConfigDir(): Promise<void> {
     try {
         await fs.mkdir(CONFIG_DIR, { recursive: true });
-    } catch (error) {
+    } catch {
         // Directory might already exist, that's fine
     }
 }

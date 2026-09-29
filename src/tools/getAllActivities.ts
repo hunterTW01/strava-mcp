@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAllActivities as fetchAllActivities } from "../stravaClient.js";
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 
 // Common activity types
 export const ACTIVITY_TYPES = {
@@ -69,7 +70,7 @@ function formatActivitySummary(activity: any): string {
     const activityId = activity.id ?? 'N/A';
 
     const stravaUrl = activityId !== 'N/A' ? `https://www.strava.com/activities/${activityId}` : '';
-    return `${type} ${activity.name} (ID: ${activityId}) - ${distance} in ${duration} on ${date}${stravaUrl ? `\n   URL: ${stravaUrl}` : ''}`;
+    return `${activity.name} (ID: ${activityId}) - ${type} - ${distance} in ${duration} on ${date}${stravaUrl ? `\n   URL: ${stravaUrl}` : ''}`;
 }
 
 // Helper function to format duration
@@ -92,7 +93,7 @@ export const getAllActivities = {
     description: "Fetches complete activity history with optional filtering by date range and activity type. Supports pagination to retrieve all activities.",
     inputSchema: GetAllActivitiesInputSchema,
     execute: async (input: GetAllActivitiesInput) => {
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
         
         if (!token || token === 'YOUR_STRAVA_ACCESS_TOKEN_HERE') {
             console.error("Missing or placeholder STRAVA_ACCESS_TOKEN in .env");

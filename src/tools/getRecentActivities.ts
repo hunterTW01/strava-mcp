@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getRecentActivities as fetchActivities, getAuthenticatedAthlete } from "../stravaClient.js";
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 // Reverted SDK type imports
 
 const GetRecentActivitiesInputSchema = z.object({
@@ -15,7 +16,7 @@ export const getRecentActivities = {
     inputSchema: GetRecentActivitiesInputSchema,
     // Ensure the return type matches the expected structure, relying on inference
     execute: async ({ perPage }: GetRecentActivitiesInput) => {
-      const token = process.env.STRAVA_ACCESS_TOKEN;
+      const token = await getValidAccessToken();
 
       // --- DEBUGGING: Print the token being used --- 
       console.error(`[DEBUG] Using STRAVA_ACCESS_TOKEN: ${token?.substring(0, 5)}...${token?.slice(-5)}`);

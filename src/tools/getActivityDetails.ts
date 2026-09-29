@@ -5,6 +5,7 @@ import {
     getActivityById as fetchActivityById,
     StravaDetailedActivity // Type needed for formatter
 } from "../stravaClient.js";
+import { getValidAccessToken } from "../runtime/stravaTokenRuntime.js";
 // import { formatDuration } from "../server.js"; // Removed, now local
 
 // Zod schema for input validation
@@ -91,7 +92,7 @@ export const getActivityDetailsTool = {
     description: "Fetches detailed information about a specific activity using its ID.",
     inputSchema: GetActivityDetailsInputSchema,
     execute: async ({ activityId }: GetActivityDetailsInput) => {
-        const token = process.env.STRAVA_ACCESS_TOKEN;
+        const token = await getValidAccessToken();
 
         if (!token) {
             console.error("Missing STRAVA_ACCESS_TOKEN environment variable.");
@@ -134,4 +135,4 @@ export function registerGetActivityDetailsTool(server: McpServer) {
     getActivityDetails.execute
   );
 }
-*/ 
+*/
